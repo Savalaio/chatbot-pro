@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot Pro | Savalaio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --whatsapp: #25d366;
+            --whatsapp-dark: #128c7e;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --whatsapp-gradient: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-card);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 30px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--gradient);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo-text h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Channel Tabs */
+        .channel-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .channel-tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .channel-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .channel-tab.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .channel-tab i {
+            font-size: 16px;
+        }
+
+        /* WhatsApp Panel */
+        .whatsapp-panel {
+            background: linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(18, 140, 126, 0.1) 100%);
+            border: 1px solid rgba(37, 211, 102, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .whatsapp-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            color: var(--whatsapp);
+        }
+
+        .whatsapp-header i {
+            font-size: 24px;
+        }
+
+        .whatsapp-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .whatsapp-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .status-dot.connected {
+            background: var(--whatsapp);
+            box-shadow: 0 0 10px var(--whatsapp);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .qr-container {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .qr-container.active {
+            display: block;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            background: #f0f0f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .qr-loading {
+            position: absolute;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .qr-instruction {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .whatsapp-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-whatsapp {
+            background: var(--whatsapp-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-whatsapp:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+        }
+
+        .btn-whatsapp:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Stats */
+        .stats-section {
+            margin-top: auto;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .stat-value.web {
+            color: var(--primary);
+        }
+
+        .stat-value.whatsapp {
+            color: var(--whatsapp);
+        }
+
+        /* Chat Area */
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-dark);
+        }
+
+        .chat-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-info h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .header-info p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        /* Messages */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            max-width: 75%;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+        }
+
+        .message.whatsapp {
+            align-self: flex-start;
+            max-width: 85%;
+        }
+
+        .message-wrapper {
+            display: flex;
+            gap: 12px;
+        }
+
+        .message.user .message-wrapper {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .avatar.user {
+            background: var(--primary);
+        }
+
+        .avatar.bot {
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+        }
+
+        .avatar.whatsapp {
+            background: var(--whatsapp-gradient);
+        }
+
+        .message-content {
+            padding: 16px 20px;
+            border-radius: 18px;
+            line-height: 1.6;
+            font-size: 15px;
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: var(--gradient);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message.whatsapp .message-content {
+            background: linear-gradient(135deg, rgba(37, 211, 102, 0.15) 0%, rgba(18, 140, 126, 0.15) 100%);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(37, 211, 102, 0.3);
+        }
+
+        .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .message.user .message-meta {
+            justify-content: flex-end;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-whatsapp {
+            background: var(--whatsapp);
+            color: white;
+        }
+
+        /* Input Area */
+        .input-container {
+            padding: 20px 30px;
+            background: rgba(30, 41, 59, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: border-color 0.3s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--primary);
+        }
+
+        .phone-input {
+            width: 140px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            display: none;
+        }
+
+        .phone-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .phone-input.active {
+            display: block;
+        }
+
+        #messageInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 15px;
+            padding: 14px;
+            outline: none;
+            resize: none;
+            max-height: 120px;
+            font-family: inherit;
+        }
+
+        #messageInput::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .send-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: none;
+            background: var(--gradient);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .typing-indicator.active {
+            display: flex;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -340px;
+                top: 0;
+                bottom: 0;
+                z-index: 1000;
+                transition: left 0.3s;
+                width: 340px;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+        }
+
+        /* Welcome Message */
+        .welcome-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .feature-card:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .feature-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <div class="logo-icon">🤖</div>
+                <div class="logo-text">
+                    <h1>ChatBot Pro</h1>
+                    <p>by Savalaio</p>
+                </div>
+            </div>
+
+            <!-- Channel Selector -->
+            <div class="channel-tabs">
+                <button class="channel-tab active" onclick="switchChannel('web')">
+                    <i class="fas fa-globe"></i> Web
+                </button>
+                <button class="channel-tab" onclick="switchChannel('whatsapp')">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </button>
+            </div>
+
+            <!-- WhatsApp Panel -->
+            <div class="whatsapp-panel">
+                <div class="whatsapp-header">
+                    <i class="fab fa-whatsapp"></i>
+                    <h3>WhatsApp Bot</h3>
+                </div>
+
+                <div class="whatsapp-status">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Verificando...</span>
+                </div>
+
+                <div class="qr-container" id="qrContainer">
+                    <div class="qr-code" id="qrCode">
+                        <span class="qr-loading">
+                            <i class="fas fa-spinner fa-spin"></i> Carregando...
+                        </span>
+                    </div>
+                    <div class="qr-instruction">
+                        Abra o WhatsApp no celular<br>
+                        <b>Menu → Aparelhos conectados → Conectar</b>
+                    </div>
+                </div>
+
+                <div class="whatsapp-actions">
+                    <button class="btn btn-whatsapp" id="connectBtn" onclick="connectWhatsApp()">
+                        <i class="fas fa-qrcode"></i> Conectar
+                    </button>
+                    <button class="btn btn-secondary" onclick="logoutWhatsApp()" title="Desconectar">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-section">
+                <div class="stats-title">Estatísticas</div>
+                <div class="stat-item">
+                    <div class="stat-label">
+                        <i class="fas fa-globe" style="color: var(--primary);"></i>
+                        Mensagens Web
+                    </div>
+                    <div class="stat-value web" id="webCount">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">
+                        <i class="fab fa-whatsapp" style="color: var(--whatsapp);"></i>
+                        Mensagens WhatsApp
+                    </div>
+                    <div class="stat-value whatsapp" id="waCount">0</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Chat Area -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <div class="header-info">
+                    <h2 id="chatTitle">Assistente Virtual</h2>
+                    <p id="chatSubtitle">Conectado e pronto para ajudar</p>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="clearChat()" title="Limpar conversa">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="icon-btn" onclick="toggleSidebar()" title="Menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="messages-container" id="messagesContainer">
+                <!-- Welcome Message -->
+                <div class="message bot">
+                    <div class="message-wrapper">
+                        <div class="avatar bot">🤖</div>
+                        <div>
+                            <div class="message-content">
+                                Olá! Bem-vindo ao <b>ChatBot Pro</b>! 👋<br><br>
+                                Estou integrado ao <b>WhatsApp</b> via Evolution API e à <b>Inteligência Artificial</b>
+                                da OpenAI.
+                                <br><br>
+                                <div class="welcome-features">
+                                    <div class="feature-card"
+                                        onclick="sendQuick('Quero criar um chatbot para meu negócio')">
+                                        <div class="feature-icon"
+                                            style="background: rgba(99, 102, 241, 0.2); color: var(--primary);">🚀</div>
+                                        <div class="feature-title">Chatbot Negócio</div>
+                                        <div class="feature-desc">Automatize atendimento</div>
+                                    </div>
+                                    <div class="feature-card"
+                                        onclick="sendQuick('Como funciona a integração WhatsApp?')">
+                                        <div class="feature-icon"
+                                            style="background: rgba(37, 211, 102, 0.2); color: var(--whatsapp);">💬
+                                        </div>
+                                        <div class="feature-title">WhatsApp API</div>
+                                        <div class="feature-desc">Evolution API</div>
+                                    </div>
+                                    <div class="feature-card" onclick="sendQuick('Explique Inteligência Artificial')">
+                                        <div class="feature-icon"
+                                            style="background: rgba(236, 72, 153, 0.2); color: #ec4899;">🧠</div>
+                                        <div class="feature-title">IA Avançada</div>
+                                        <div class="feature-desc">GPT-3.5/GPT-4</div>
+                                    </div>
+                                    <div class="feature-card" onclick="sendQuick('Preciso de ajuda técnica')">
+                                        <div class="feature-icon"
+                                            style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">🛠️</div>
+                                        <div class="feature-title">Suporte Técnico</div>
+                                        <div class="feature-desc">Ajuda especializada</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="message-meta">
+                                <span>Assistente</span>
+                                <span>•</span>
+                                <span>Agora</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typing Indicator -->
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <input type="text" class="phone-input" id="phoneInput" placeholder="55 11 99999-9999">
+                    <textarea id="messageInput" placeholder="Digite sua mensagem..." rows="1"
+                        onkeypress="handleKeyPress(event)" oninput="autoResize(this)"></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // ==================== CONFIGURAÇÃO ====================
+        const socket = io();
+        const roomId = 'room-' + Math.random().toString(36).substr(2, 9);
+        let currentChannel = 'web';
+        let whatsappConnected = false;
+        let messageCount = { web: 0, whatsapp: 0 };
+
+        // Entrar na sala
+        socket.emit('join-room', roomId);
+
+        // ==================== SOCKET EVENTS ====================
+        socket.on('new-message', (msg) => {
+            hideTyping();
+            addMessage(msg);
+            if (msg.sender === 'user') incrementStat('web');
+        });
+
+        socket.on('typing', (data) => {
+            document.getElementById('typingIndicator').classList.toggle('active', data.isTyping);
+        });
+
+        socket.on('whatsapp-message', (data) => {
+            addMessage({
+                sender: 'whatsapp',
+                text: `<b>📱 ${data.from}</b><br>${data.text}<br><br><b>🤖 Resposta:</b><br>${data.response}`,
+                timestamp: data.timestamp,
+                isWhatsapp: true
+            });
+            incrementStat('whatsapp');
+        });
+
+        socket.on('new-whatsapp-stats', (data) => {
+            incrementStat('whatsapp');
+        });
+
+        // ==================== FUNÇÕES UI ====================
+        function addMessage(msg) {
+            const container = document.getElementById('messagesContainer');
+            const indicator = document.getElementById('typingIndicator');
+
+            const div = document.createElement('div');
+            div.className = `message ${msg.sender}`;
+
+            const avatar = msg.sender === 'user' ? '👤' :
+                msg.sender === 'whatsapp' ? '📱' : '🤖';
+            const name = msg.sender === 'user' ? 'Você' :
+                msg.sender === 'whatsapp' ? 'WhatsApp' : 'Assistente';
+
+            div.innerHTML = `
+                <div class="message-wrapper">
+                    <div class="avatar ${msg.sender}">${avatar}</div>
+                    <div style="max-width: 100%;">
+                        <div class="message-content">${formatText(msg.text)}</div>
+                        <div class="message-meta">
+                            <span>${name}</span>
+                            ${msg.isWhatsapp ? '<span class="badge badge-whatsapp"><i class="fab fa-whatsapp"></i> WA</span>' : ''}
+                            <span>•</span>
+                            <span>${formatTime(msg.timestamp)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.insertBefore(div, indicator);
+            scrollToBottom();
+        }
+
+        function formatText(text) {
+            // Links clicáveis
+            text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: inherit; text-decoration: underline;">$1</a>');
+            // Quebras de linha
+            text = text.replace(/\n/g, '<br>');
+            return text;
+        }
+
+        function formatTime(ts) {
+            return new Date(ts).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (currentChannel === 'web') {
+                socket.emit('send-message', {
+                    roomId: roomId,
+                    message: text,
+                    userId: 'web-user'
+                });
+
+                // Mostrar mensagem do usuário imediatamente
+                addMessage({
+                    sender: 'user',
+                    text: text,
+                    timestamp: new Date().toISOString()
+                });
+
+                showTyping();
+            } else {
+                // WhatsApp
+                const phone = document.getElementById('phoneInput').value.replace(/\D/g, '');
+                if (phone.length < 10) {
+                    alert('Digite um número válido com DDD');
+                    return;
+                }
+                sendWhatsAppMessage(phone, text);
+            }
+
+            input.value = '';
+            autoResize(input);
+        }
+
+        async function sendWhatsAppMessage(number, message) {
+            const btn = document.getElementById('sendBtn');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/whatsapp/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ number, message })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    addMessage({
+                        sender: 'user',
+                        text: `📱 Enviado para ${number}:<br>${message}`,
+                        timestamp: new Date().toISOString()
+                    });
+                    incrementStat('web');
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            } catch (err) {
+                alert('Erro de conexão');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function sendQuick(text) {
+            document.getElementById('messageInput').value = text;
+            sendMessage();
+        }
+
+        // ==================== WHATSAPP FUNCTIONS ====================
+        async function checkWhatsAppStatus() {
+            try {
+                const res = await fetch('/api/whatsapp/status');
+                const data = await res.json();
+
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                const btn = document.getElementById('connectBtn');
+
+                if (data.connected) {
+                    dot.classList.add('connected');
+                    text.textContent = 'Conectado';
+                    btn.innerHTML = '<i class="fas fa-check"></i> Conectado';
+                    btn.disabled = true;
+                    whatsappConnected = true;
+                    document.getElementById('qrContainer').classList.remove('active');
+                } else {
+                    text.textContent = 'Desconectado';
+                    btn.innerHTML = '<i class="fas fa-qrcode"></i> Conectar';
+                    btn.disabled = false;
+                    whatsappConnected = false;
+                }
+            } catch (err) {
+                document.getElementById('statusText').textContent = 'Erro de conexão';
+            }
+        }
+
+        async function connectWhatsApp() {
+            const btn = document.getElementById('connectBtn');
+            const qrContainer = document.getElementById('qrContainer');
+            const qrCode = document.getElementById('qrCode');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
+            qrContainer.classList.add('active');
+
+            try {
+                // Criar instância
+                await fetch('/api/whatsapp/create', { method: 'POST' });
+
+                // Aguardar e buscar QR
+                let attempts = 0;
+                const checkQR = setInterval(async () => {
+                    attempts++;
+                    if (attempts > 30) { // 1 minuto timeout
+                        clearInterval(checkQR);
+                        qrCode.innerHTML = '<span style="color: var(--error);">Tempo esgotado. Tente novamente.</span>';
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-qrcode"></i> Tentar Novamente';
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch('/api/whatsapp/qrcode');
+                        const data = await res.json();
+
+                        if (data.qrcode) {
+                            qrCode.innerHTML = `<img src="${data.qrcode}" alt="QR Code">`;
+                            clearInterval(checkQR);
+                            // Verificar conexão
+                            setTimeout(() => startConnectionCheck(), 3000);
+                        }
+                    } catch (e) {
+                        console.log('QR ainda não disponível...');
+                    }
+                }, 2000);
+
+            } catch (err) {
+                qrCode.innerHTML = '<span style="color: var(--error);">Erro: ' + err.message + '</span>';
+                btn.disabled = false;
+            }
+        }
+
+        function startConnectionCheck() {
+            const check = setInterval(async () => {
+                await checkWhatsAppStatus();
+                if (whatsappConnected) {
+                    clearInterval(check);
+                }
+            }, 3000);
+
+            // Parar após 2 minutos
+            setTimeout(() => clearInterval(check), 120000);
+        }
+
+        async function logoutWhatsApp() {
+            if (!confirm('Desconectar WhatsApp?')) return;
+
+            try {
+                await fetch('/api/whatsapp/logout', { method: 'POST' });
+                location.reload();
+            } catch (err) {
+                alert('Erro ao desconectar');
+            }
+        }
+
+        // ==================== UI HELPERS ====================
+        function switchChannel(channel) {
+            currentChannel = channel;
+            document.querySelectorAll('.channel-tab').forEach(t => t.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            const phoneInput = document.getElementById('phoneInput');
+            const chatTitle = document.getElementById('chatTitle');
+            const chatSubtitle = document.getElementById('chatSubtitle');
+
+            if (channel === 'whatsapp') {
+                phoneInput.classList.add('active');
+                chatTitle.textContent = 'WhatsApp Direct';
+                chatSubtitle.textContent = 'Envie mensagens diretamente para números';
+            } else {
+                phoneInput.classList.remove('active');
+                chatTitle.textContent = 'Assistente Virtual';
+                chatSubtitle.textContent = 'Conectado e pronto para ajudar';
+            }
+        }
+
+        function showTyping() {
+            document.getElementById('typingIndicator').classList.add('active');
+        }
+
+        function hideTyping() {
+            document.getElementById('typingIndicator').classList.remove('active');
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function incrementStat(type) {
+            messageCount[type]++;
+            document.getElementById(type === 'web' ? 'webCount' : 'waCount').textContent = messageCount[type];
+        }
+
+        function clearChat() {
+            if (!confirm('Limpar toda a conversa?')) return;
+
+            const container = document.getElementById('messagesContainer');
+            const messages = container.querySelectorAll('.message');
+            messages.forEach(m => m.remove());
+
+            // Resetar estatísticas
+            messageCount = { web: 0, whatsapp: 0 };
+            document.getElementById('webCount').textContent = '0';
+            document.getElementById('waCount').textContent = '0';
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            checkWhatsAppStatus();
+            // Verificar status a cada 10 segundos
+            setInterval(checkWhatsAppStatus, 10000);
+        });
+    </script>
+</body>
+
+</html>
