@@ -10,7 +10,7 @@ COPY . .
 RUN mkdir -p public
 
 # Expor porta
-EXPOSE 3001
+EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
