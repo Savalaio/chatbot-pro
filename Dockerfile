@@ -9,6 +9,13 @@ COPY . .
 
 RUN mkdir -p public
 
+EXPOSE 8080
+
+CMD ["node", "server.js"]
+COPY . .
+
+RUN mkdir -p public
+
 # Expor porta
 EXPOSE 80
 
