@@ -1,9 +1,9 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const cors = require("cors");
-const path = require("path");
-const axios = require("axios");
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+const path = require('path');
+const axios = require('axios');
 
 const app = express();
 const server = http.createServer(app);
@@ -11,104 +11,147 @@ const io = new Server(server, { cors: { origin: "*" } });
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// CONFIGURAÇÕES - SUA INSTÂNCIA EXISTENTE
-const EVOLUTION_API_URL = "https://evo.realizador.com.br";
+// CONFIGURAÇÕES
+const EVOLUTION_API_URL = 'https://evo.realizador.com.br';
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
-const INSTANCE_NAME = "Controle_11";
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const INSTANCE_NAME = 'Controle_11';
+const OLLAMA_URL = process.env.OLLAMA_URL || 'http://ollama:11434';
+const USE_OLLAMA = process.env.USE_OLLAMA === 'true';
 
 // CLIENTE EVOLUTION
 const evolution = {
-  headers: { "Content-Type": "application/json", apikey: EVOLUTION_API_KEY },
-
+  headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY },
+  
   async sendText(number, text) {
-    const clean = number.replace(/\D/g, "");
-    const formatted = clean.includes("@") ? clean : `${clean}@s.whatsapp.net`;
+    const clean = number.replace(/\D/g, '');
+    const formatted = clean.includes('@') ? clean : `${clean}@s.whatsapp.net`;
     return axios.post(
       `${EVOLUTION_API_URL}/message/sendText/${INSTANCE_NAME}`,
       { number: formatted, text, options: { delay: 1200 } },
-      { headers: this.headers },
+      { headers: this.headers }
     );
   },
-
+  
   async status() {
-    return axios.get(
-      `${EVOLUTION_API_URL}/instance/connectionState/${INSTANCE_NAME}`,
-      { headers: this.headers },
-    );
-  },
+    return axios.get(`${EVOLUTION_API_URL}/instance/connectionState/${INSTANCE_NAME}`, { headers: this.headers });
+  }
 };
 
 // ARMAZENAMENTO
 const history = new Map();
 
-// PROCESSAR COM IA
-async function processAI(text, user) {
-  if (!OPENAI_API_KEY) return "[DEMO] " + text;
-
-  const { OpenAI } = require("openai");
-  const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-
-  const chat = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    messages: [
-      {
-        role: "system",
-        content: "Assistente profissional, respostas curtas em portugues.",
-      },
-      { role: "user", content: text },
-    ],
-    max_tokens: 500,
-  });
-
-  return chat.choices[0].message.content;
+// PROCESSAR COM IA (OLLAMA OU OPENAI)
+async function processAI(text) {
+  // Tentar Ollama primeiro se habilitado
+  if (USE_OLLAMA) {
+    try {
+      const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
+        model: 'llama3.2',
+        prompt: `Você é um assistente profissional de atendimento ao cliente. Responda em português de forma cordial, direta e útil: ${text}`,
+        stream: false,
+        options: {
+          temperature: 0.7,
+          num_predict: 500
+        }
+      }, { timeout: 30000 });
+      
+      return response.data.response;
+    } catch (error) {
+      console.log('Ollama falhou:', error.message);
+      // Fallback para modo demo se Ollama falhar
+    }
+  }
+  
+  // Modo demo se não tiver Ollama
+  return `🤖 [Modo Demo] Você disse: "${text}"\n\nConfigure Ollama para respostas inteligentes!`;
 }
 
+// VERIFICAR SE OLLAMA ESTÁ ONLINE
+app.get('/api/ollama/status', async (req, res) => {
+  try {
+    const response = await axios.get(`${OLLAMA_URL}/api/tags`, { timeout: 5000 });
+    res.json({ 
+      online: true, 
+      models: response.data.models?.map(m => m.name) || [],
+      url: OLLAMA_URL 
+    });
+  } catch (error) {
+    res.json({ 
+      online: false, 
+      error: error.message,
+      url: OLLAMA_URL 
+    });
+  }
+});
+
+// LISTAR MODELOS DISPONÍVEIS
+app.get('/api/ollama/models', async (req, res) => {
+  try {
+    const response = await axios.get(`${OLLAMA_URL}/api/tags`, { timeout: 5000 });
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// BAIXAR MODELO
+app.post('/api/ollama/pull', async (req, res) => {
+  try {
+    const { model } = req.body;
+    const response = await axios.post(`${OLLAMA_URL}/api/pull`, {
+      name: model || 'llama3.2',
+      stream: false
+    }, { timeout: 300000 }); // 5 minutos para download
+    
+    res.json({ success: true, message: `Modelo ${model} baixado` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // WEBHOOK - RECEBER MENSAGENS DO WHATSAPP
-app.post("/webhook/evolution", async (req, res) => {
+app.post('/webhook/evolution', async (req, res) => {
   try {
     const { data } = req.body;
-    if (!data?.message) return res.send("OK");
-
+    if (!data?.message) return res.send('OK');
+    
     const from = data.key?.remoteJid || data.sender;
-    const text =
-      data.message.conversation || data.message.extendedTextMessage?.text || "";
-    if (!text) return res.send("OK");
-
-    const phone = from.replace("@s.whatsapp.net", "").replace("@g.us", "");
-    console.log(`WhatsApp ${phone}: ${text}`);
-
-    const reply = await processAI(text, phone);
+    const text = data.message.conversation || data.message.extendedTextMessage?.text || '';
+    if (!text) return res.send('OK');
+    
+    const phone = from.replace('@s.whatsapp.net', '').replace('@g.us', '');
+    console.log(`📱 WhatsApp ${phone}: ${text.substring(0, 50)}...`);
+    
+    const reply = await processAI(text);
     await evolution.sendText(phone, reply);
-
-    io.emit("whatsapp-msg", {
-      phone,
-      text,
-      reply,
-      time: new Date().toISOString(),
-    });
-    res.json({ ok: true });
+    
+    io.emit('whatsapp-message', { phone, text, reply, time: new Date().toISOString() });
+    res.json({ success: true });
   } catch (err) {
-    console.error(err);
+    console.error('Erro webhook:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
 // ROTAS API
-app.get("/api/health", (req, res) => res.json({ status: "OK" }));
+app.get('/api/health', (req, res) => res.json({ 
+  status: 'OK', 
+  ollama: USE_OLLAMA,
+  url: OLLAMA_URL 
+}));
 
-app.get("/api/status", async (req, res) => {
+app.get('/api/status', async (req, res) => {
   try {
     const { data } = await evolution.status();
-    res.json({ connected: data.state === "open", state: data.state });
+    res.json({ connected: data.state === 'open', state: data.state });
   } catch (err) {
     res.json({ connected: false, error: err.message });
   }
 });
 
-app.post("/api/send", async (req, res) => {
+app.post('/api/send', async (req, res) => {
   try {
     const { number, message } = req.body;
     await evolution.sendText(number, message);
@@ -119,43 +162,39 @@ app.post("/api/send", async (req, res) => {
 });
 
 // WEBSOCKET
-io.on("connection", (socket) => {
-  socket.on("join", (room) => {
+io.on('connection', (socket) => {
+  console.log('Cliente conectado:', socket.id);
+  
+  socket.on('join', (room) => {
     socket.join(room);
-    socket.emit("history", history.get(room) || []);
+    socket.emit('history', history.get(room) || []);
   });
-
-  socket.on("msg", async (data) => {
-    const { room, text, user } = data;
-
-    const userMsg = {
-      id: Date.now(),
-      text,
-      sender: "user",
-      time: new Date().toISOString(),
-    };
+  
+  socket.on('msg', async (data) => {
+    const { room, text } = data;
+    
+    const userMsg = { id: Date.now(), text, sender: 'user', time: new Date().toISOString() };
     const list = history.get(room) || [];
     list.push(userMsg);
     history.set(room, list);
-
-    io.to(room).emit("new-msg", userMsg);
-
-    const reply = await processAI(text, user);
-    const botMsg = {
-      id: Date.now() + 1,
-      text: reply,
-      sender: "bot",
-      time: new Date().toISOString(),
-    };
+    io.to(room).emit('new-msg', userMsg);
+    
+    const reply = await processAI(text);
+    const botMsg = { id: Date.now() + 1, text: reply, sender: 'bot', time: new Date().toISOString() };
     list.push(botMsg);
     history.set(room, list);
-
-    io.to(room).emit("new-msg", botMsg);
+    io.to(room).emit('new-msg', botMsg);
   });
 });
 
 // INICIAR
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, "0.0.0.0", () => {
-  console.log("Servidor na porta " + PORT);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log('========================================');
+  console.log('ChatBot Pro - Savalaio');
+  console.log('========================================');
+  console.log('Porta: ' + PORT);
+  console.log('Ollama: ' + (USE_OLLAMA ? 'Ativo (' + OLLAMA_URL + ')' : 'Desativado'));
+  console.log('Evolution: ' + EVOLUTION_API_URL);
+  console.log('========================================');
 });
