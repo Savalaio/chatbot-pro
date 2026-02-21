@@ -122,7 +122,7 @@ io.on('connection', (socket) => {
 });
 
 // Start
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 8080;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Servidor na porta ' + PORT);
 });
